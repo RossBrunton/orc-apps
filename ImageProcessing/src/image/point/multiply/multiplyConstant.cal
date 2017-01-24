@@ -1,0 +1,13 @@
+package image.point.multiply;
+
+actor multiplyConstant() uint(size=8) Gin ==> uint(size=8) Gout :
+    int(size=32) factor = 2;
+    int(size=32) divisor = 1;
+
+    action Gin:[x] ==> Gout:[
+        if (divisor < factor) && x >= ((255 / factor) * divisor)
+        then 255
+        else (x * factor) / divisor end
+    ]
+    end
+end
