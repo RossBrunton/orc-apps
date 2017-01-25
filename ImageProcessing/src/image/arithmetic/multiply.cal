@@ -1,6 +1,6 @@
-package image.point.multiply;
+package image.arithmetic;
 
-actor multiplyConstant() uint(size=8) Gin ==> uint(size=8) Gout :
+actor multiply() uint(size=8) Gin ==> uint(size=8) Gout :
     int(size=32) factor = 2;
     int(size=32) divisor = 1;
 
