@@ -18,11 +18,24 @@
     <Instance id="Label">
         <Class name="image.analysis.connected_components.Label"/>
     </Instance>
+    <Instance id="DoubleCache">
+        <Class name="image.analysis.connected_components.DoubleCache"/>
+    </Instance>
+    <Instance id="Replace">
+        <Class name="image.analysis.connected_components.Replace"/>
+    </Instance>
+    <Instance id="Reduce">
+        <Class name="image.analysis.connected_components.Reduce"/>
+    </Instance>
     <Connection dst="FileWriter" dst-port="Byte" src="EndOfStream" src-port="Out"/>
     <Connection dst="FileWriter" dst-port="pEOF" src="EndOfStream" src-port="pEOF"/>
     <Connection dst="Threshold" dst-port="Gin" src="FileReader" src-port="O"/>
     <Connection dst="Label" dst-port="Gin" src="Threshold" src-port="Gout"/>
-    <Connection dst="EndOfStream" dst-port="In" src="Label" src-port="Gout"/>
-    <Connection dst="Above" dst-port="Gin" src="Label" src-port="Gout"/>
     <Connection dst="Label" dst-port="Above" src="Above" src-port="Gout"/>
+    <Connection dst="Replace" dst-port="Equiv" src="Label" src-port="Equiv"/>
+    <Connection dst="Reduce" dst-port="Gin" src="Replace" src-port="Gout"/>
+    <Connection dst="Replace" dst-port="Gin" src="DoubleCache" src-port="Gout"/>
+    <Connection dst="DoubleCache" dst-port="Gin" src="Label" src-port="Gout"/>
+    <Connection dst="Above" dst-port="Gin" src="Label" src-port="Gout"/>
+    <Connection dst="EndOfStream" dst-port="In" src="Reduce" src-port="Gout"/>
 </XDF>

@@ -29,68 +29,34 @@
 
 /*
  * Author: Ross Brunton <bruntonross@gmail.com>
- * Date: 01.02.2017
- * See Above.md for documentation.
+ * Date: 28.01.2017
+ * See DoubleCache.md for documentation.
  */
 
 package image.analysis.connected_components;
 
 import image.constants.constants.*;
 
-actor Above() uint(size=16) Gin ==> uint(size=16) Gout :
-    uint(size=32) entries = IM_WIDTH_OUT * COLOUR_CHANNELS_OUT;
-    uint(size=16) above[entries];
-    uint(size=16) current[entries];
-    int(size=32) col := 0;
-    uint(size=32) row := IM_HEIGHT_OUT;
-    uint(size=16) ul := 0; // Outputs; upper left, upper middle, upper right
-    uint(size=16) um := 0;
-    uint(size=16) ur := 0;
+actor DoubleCache() uint(size=16) Gin ==> uint(size=16) Gout :
+    uint(size=32) entries = IM_WIDTH_OUT * IM_HEIGHT_OUT * COLOUR_CHANNELS_OUT + 16;
+    uint(size=16) store[entries];
+    uint(size=32) start := 0;
+    uint(size=32) last := 0;
+    uint(size=16) out := 0;
 
-    function Get (uint(size=32) index) --> uint(size=16):
-        if index < 0 || index >= IM_WIDTH_OUT * COLOUR_CHANNELS_OUT then
-            0
-        else
-            above[index]
-        end
-    end
-
-    reset: action ==>
-    guard row = IM_HEIGHT_OUT
+    action Gin:[x] ==>
+    guard start != last - 1 && not (start = entries -1 && last = 0)
     do
-        current := [0: for uint(size=32) _ in 1 .. (IM_WIDTH_OUT * COLOUR_CHANNELS_OUT)];
-        above := [0: for uint(size=32) _ in 1 .. (IM_WIDTH_OUT * COLOUR_CHANNELS_OUT)];
-        row := 0;
-        col := 0;
+        store[start] := x;
+        start := start + 1;
+        start := start mod entries;
     end
 
-    write: action ==> Gout:[ul, um, ur]
+    action ==> Gout:[out]
+    guard last != start
     do
-        ul := Get(col - 1);
-        um := Get(col);
-        ur := Get(col + 1);
-    end
-
-    read: action Gin:[x] ==>
-    do
-        current[col] := x;
-        
-        col := col + 1;
-
-        if col = IM_WIDTH_OUT * COLOUR_CHANNELS_OUT then
-            col := 0;
-            row := row + 1;
-            above := current;
-        end
-    end
-
-    schedule fsm write:
-        write (write) --> read;
-        write (reset) --> write;
-        read (read) --> write;
-    end
-
-    priority
-        reset > write;
+        out := store[last];
+        last := last + 1;
+        last := last mod entries;
     end
 end
