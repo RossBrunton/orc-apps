@@ -38,7 +38,7 @@ package image.analysis.connected_components;
 import image.constants.constants.*;
 
 actor Above() uint(size=16) Gin ==> uint(size=16) Gout :
-    uint(size=32) entries = IM_WIDTH_OUT * COLOUR_CHANNELS_OUT;
+    uint(size=32) entries = IM_WIDTH_OUT;
     uint(size=16) above[entries];
     uint(size=16) current[entries];
     int(size=32) col := 0;
@@ -48,7 +48,7 @@ actor Above() uint(size=16) Gin ==> uint(size=16) Gout :
     uint(size=16) ur := 0;
 
     function Get (uint(size=32) index) --> uint(size=16):
-        if index < 0 || index >= IM_WIDTH_OUT * COLOUR_CHANNELS_OUT then
+        if index < 0 || index >= IM_WIDTH_OUT then
             0
         else
             above[index]
@@ -58,8 +58,8 @@ actor Above() uint(size=16) Gin ==> uint(size=16) Gout :
     reset: action ==>
     guard row = IM_HEIGHT_OUT
     do
-        current := [0: for uint(size=32) _ in 1 .. (IM_WIDTH_OUT * COLOUR_CHANNELS_OUT)];
-        above := [0: for uint(size=32) _ in 1 .. (IM_WIDTH_OUT * COLOUR_CHANNELS_OUT)];
+        current := [0: for uint(size=32) _ in 1 .. (IM_WIDTH_OUT)];
+        above := [0: for uint(size=32) _ in 1 .. (IM_WIDTH_OUT)];
         row := 0;
         col := 0;
     end
@@ -77,7 +77,7 @@ actor Above() uint(size=16) Gin ==> uint(size=16) Gout :
         
         col := col + 1;
 
-        if col = IM_WIDTH_OUT * COLOUR_CHANNELS_OUT then
+        if col = IM_WIDTH_OUT then
             col := 0;
             row := row + 1;
             above := current;

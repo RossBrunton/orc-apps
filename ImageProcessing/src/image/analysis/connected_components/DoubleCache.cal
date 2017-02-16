@@ -37,6 +37,7 @@ package image.analysis.connected_components;
 
 import image.constants.constants.*;
 
+// Uses around 0.5MB
 actor DoubleCache() uint(size=16) Gin ==> uint(size=16) Gout :
     uint(size=32) entries = IM_WIDTH_OUT * IM_HEIGHT_OUT + 16;
     uint(size=16) store[entries];

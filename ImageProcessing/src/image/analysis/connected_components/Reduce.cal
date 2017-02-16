@@ -61,7 +61,7 @@ actor Reduce() uint(size=16) Gin ==> uint(size=8) Gout :
             while i < entries do
                 if slots[i] = x || slots[i] = 0 then
                     slots[i] := x;
-                    out := i + 1;
+                    out := 255 - i;
                     i := entries;
                 end
                 i := i + 1;

@@ -24,3 +24,4 @@ The end result of this is that, if connected to a Label actor, it guarantees the
 
 ## Notes ##
 * The main intention for this actor is that Gin and Equiv are connected to the appropriate values of a Label actor.
+* If there are more than 500 buckets, or 1000 entries in a single bucket, this will fail and print an error.
