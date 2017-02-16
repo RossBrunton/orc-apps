@@ -68,7 +68,6 @@ actor Label() uint(size=8) Gin, uint(size=16) Above ==> uint(size=16) Gout, uint
         if x > 0 then
             label := 0;
 
-            // Would have liked to use functions for this, but functions have to be pure
             if label = 0 then
                 label := last;
             end
