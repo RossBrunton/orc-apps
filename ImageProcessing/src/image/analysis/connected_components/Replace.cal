@@ -37,14 +37,15 @@ package image.analysis.connected_components;
 
 import image.constants.constants.*;
 
-// Uses around 1MB
+// Uses around 22KiB
 actor Replace() uint(size=16) Gin, uint(size=16) Equiv ==> uint(size=16) Gout :
     uint(size=32) imageSize = IM_WIDTH_OUT * IM_HEIGHT_OUT;
-    uint(size=32) BUCKET_COUNT = 500;
-    uint(size=32) BUCKET_SIZE = 1000;
+    uint(size=16) DATA_SIZE = 1024 * 10;
+    uint(size=32) BUCKET_COUNT = 1000;
     uint(size=32) p := imageSize;
-    uint(size=16) buckets[BUCKET_COUNT][BUCKET_SIZE];
-    uint(size=16) bucketHeads[BUCKET_COUNT]; // Pointing to one more than the highest element in the list
+    uint(size=16) data[DATA_SIZE];
+    uint(size=16) dp := 0;
+    uint(size=16) bucketHeads[BUCKET_COUNT]; // Pointing to the first element of the list
     bool doTransition := false;
     uint(size=16) out := 0;
     uint(size=16) fromBucket := 0;
@@ -57,6 +58,7 @@ actor Replace() uint(size=16) Gin, uint(size=16) Equiv ==> uint(size=16) Gout :
     guard p = imageSize
     do
         bucketHeads := [0: for uint(size=16) _ in 1 .. (BUCKET_COUNT)]; // Need 16 bit integers because bug in orcc
+        dp := 2;
         p := 0;
         doTransition := false;
     end
@@ -70,20 +72,24 @@ actor Replace() uint(size=16) Gin, uint(size=16) Equiv ==> uint(size=16) Gout :
         if from = 0 then
             doTransition := true;
         else
+            if dp >= DATA_SIZE - 4 then
+                println("Replace actor out of memory!");
+            end
+
             // Check which buckets they are in
             i := 1;
             fromBucket := 0;
             toBucket := 0;
             while i < BUCKET_COUNT do
-                j := bucketHeads[i] - 1;
-                while j >= 0 do
-                    if buckets[i][j] = from then
+                j := bucketHeads[i];
+                while j != 0 do
+                    if data[j] = from then
                         fromBucket := i;
                     end
-                    if buckets[i][j] = to then
+                    if data[j] = to then
                         toBucket := i;
                     end
-                    j := j - 1;
+                    j := data[j + 1];
                 end
                 i := i + 1;
             end
@@ -96,9 +102,12 @@ actor Replace() uint(size=16) Gin, uint(size=16) Equiv ==> uint(size=16) Gout :
                 set := false;
                 while i < BUCKET_COUNT and not set do
                     if bucketHeads[i] = 0 then
-                        buckets[i][bucketHeads[i]] := from;
-                        buckets[i][bucketHeads[i] + 1] := to;
-                        bucketHeads[i] := bucketHeads[i] + 2;
+                        data[dp] := from;
+                        data[dp + 1] := dp + 2;
+                        data[dp + 2] := to;
+                        data[dp + 3] := 0;
+                        bucketHeads[i] := dp;
+                        dp := dp + 4;
                         set := true;
                     end
                     i := i + 1;
@@ -107,18 +116,16 @@ actor Replace() uint(size=16) Gin, uint(size=16) Equiv ==> uint(size=16) Gout :
 
             // If one is in a bucket, but the other isn't, append the unused one to the other's bucket
             if fromBucket = 0 && toBucket > 0 then
-                buckets[toBucket][bucketHeads[toBucket]] := from;
-                bucketHeads[toBucket] := bucketHeads[toBucket] + 1;
-                if bucketHeads[toBucket] >= BUCKET_SIZE then
-                    println("Bucket "+toBucket+" too large!");
-                end
+                data[dp] := from;
+                data[dp + 1] := bucketHeads[toBucket];
+                bucketHeads[toBucket] := dp;
+                dp := dp + 2;
             end
             if fromBucket > 0 && toBucket = 0 then
-                buckets[fromBucket][bucketHeads[fromBucket]] := to;
-                bucketHeads[fromBucket] := bucketHeads[fromBucket] + 1;
-                if bucketHeads[fromBucket] >= BUCKET_SIZE then
-                    println("Bucket "+fromBucket+" too large!");
-                end
+                data[dp] := to;
+                data[dp + 1] := bucketHeads[fromBucket];
+                bucketHeads[fromBucket] := dp;
+                dp := dp + 2;
             end
 
             // If they are in the same bucket
@@ -127,13 +134,13 @@ actor Replace() uint(size=16) Gin, uint(size=16) Equiv ==> uint(size=16) Gout :
             // If they are in different buckets, pour one into the other
             if fromBucket > 0 && toBucket > 0 && fromBucket != toBucket then
                 // Pour one into the other
-                j := bucketHeads[toBucket] - 1;
-                while j >= 0 do
-                    buckets[fromBucket][bucketHeads[fromBucket] + j] := buckets[toBucket][j];
-                    j := j - 1;
+                j := bucketHeads[toBucket];
+                while j != 0 do
+                    i := j;
+                    j := data[j + 1];
                 end
-                bucketHeads[fromBucket] := bucketHeads[fromBucket] + bucketHeads[toBucket];
-                bucketHeads[toBucket] := 0;
+                data[i + 1] := bucketHeads[fromBucket];
+                bucketHeads[fromBucket] := 0;
             end
 
             if not set then
@@ -151,12 +158,13 @@ actor Replace() uint(size=16) Gin, uint(size=16) Equiv ==> uint(size=16) Gout :
             // Find the bucket it is in
             i := 1;
             while i < BUCKET_COUNT do
-                j := bucketHeads[i] - 1;
-                while j >= 0 do
-                    if buckets[i][j] = x then
+                j := bucketHeads[i];
+                while j != 0 do
+                    if data[j] = x then
                         out := i;
+                        i := BUCKET_COUNT;
                     end
-                    j := j - 1;
+                    j := data[j + 1];
                 end
                 i := i + 1;
             end
@@ -166,13 +174,19 @@ actor Replace() uint(size=16) Gin, uint(size=16) Equiv ==> uint(size=16) Gout :
                 i := 1;
                 while i < BUCKET_COUNT do
                     if bucketHeads[i] = 0 then
-                        buckets[i][0] := x;
-                        bucketHeads[i] := 1;
+                        bucketHeads[i] := dp;
+                        data[dp] := x;
+                        data[dp + 1] := 0;
+                        dp := dp + 2;
                         out := i;
                         i := BUCKET_COUNT;
                     end
                     i := i + 1;
                 end
+            end
+
+            if out = 0 then
+                println("Failed to put value in bucket.");
             end
         end
 
