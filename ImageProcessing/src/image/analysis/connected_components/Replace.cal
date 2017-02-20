@@ -175,6 +175,8 @@ actor Replace() uint(size=16) Gin, uint(size=16) Equiv ==> uint(size=16) Gout :
                 end
             end
         end
+
+        p := p + 1;
     end
 
     schedule fsm replace:

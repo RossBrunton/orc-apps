@@ -38,7 +38,7 @@ package image.analysis.connected_components;
 import image.constants.constants.*;
 
 actor Label() uint(size=8) Gin, uint(size=16) Above ==> uint(size=16) Gout, uint(size=16) Equiv :
-    uint(size=32) imagesize = IM_WIDTH_OUT * IM_HEIGHT_OUT * COLOUR_CHANNELS_OUT;
+    uint(size=32) imagesize = IM_WIDTH_OUT * IM_HEIGHT_OUT;
     uint(size=16) last := 0;
     uint(size=8) equivP := 0;
     uint(size=16) equiv[4];
