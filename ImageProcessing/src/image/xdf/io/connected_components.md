@@ -20,9 +20,6 @@ Two pixels are "connected" they are touching ether horizontaly, vertically or di
 In effect, this actor reads the image, works out which non-zero areas are touching, gives each a unique value and then
 outputs that value for each pixel.
 
-## Internal Structure ##
-![Internal Structure Diagram](./connected_components.png)
-
 ## Notes ##
 * The output is 16 bits while the input is 8 bits.
 * If piping more than one image through this, there is no guarantee that the connected areas will refer to the same
